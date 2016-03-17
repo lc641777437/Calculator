@@ -1,0 +1,206 @@
+C51 COMPILER V9.00   MAIN                                                                  04/08/2015 12:35:48 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\software\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "includes.h" //main.c
+   2          unsigned char code uckey[20] = {
+   3                  0x37,0x38,0x39,0x28,0x29, 
+   4                  0x34,0x35,0x36,0x2b,0x2d, 
+   5                  0x31,0x32,0x33,0x2a,0x2f,
+   6                  0x30,0x2e,0x64,0xde,0x3d
+   7          }; 
+   8          char idata TR[20]; 
+   9          double idata ND[20]; 
+  10          void dispdouble(double value); 
+  11          double AccProcess(char *s); 
+  12          char getonechar(void); 
+  13          unsigned char keycount=0; 
+  14          unsigned char sk=0; void ErrorProcess(void); 
+  15          void main(void) { 
+  16   1              double value; 
+  17   1              unsigned char keyvalue; 
+  18   1              unsigned char ipos = 0; 
+  19   1              char s[32]; 
+  20   1              P2 = 0xff; 
+  21   1              delay_ms(100); 
+  22   1              LCD_init(); 
+  23   1              LCD_clear(); 
+  24   1              while(1) { 
+  25   2                      while(1) { 
+  26   3                              keyvalue = getonechar(); 
+  27   3                              if(uckey[keyvalue] == '=') { 
+  28   4                                      s[ipos++] = '#'; 
+  29   4                                      break; 
+  30   4                              } 
+  31   3                              else { 
+  32   4                                      if(uckey[keyvalue] == 'd') { 
+  33   5                                              s[--ipos] = '0'; 
+  34   5                                      } 
+  35   4                                      else if(uckey[keyvalue] == 0xde) { 
+  36   5                                              sk = !sk; 
+  37   5                                              keycount--; 
+  38   5                                              if(sk == 1) { 
+  39   6                                                      LCD_write_char(0,1,0xde);
+  40   6                                                      LCD_write_com(0x80 + keycount); 
+  41   6                                              } 
+  42   5                                              else { 
+  43   6                                                      LCD_write_char(0,1,0x20); 
+  44   6                                                      LCD_write_com(0x80 + keycount); 
+  45   6                                              } 
+  46   5                                      } 
+  47   4                                      else { 
+  48   5                                              s[ipos++] = uckey[keyvalue]; 
+  49   5                                      }               
+  50   4                              } 
+  51   3                      } 
+  52   2                      while(keycount >= 16) { 
+  53   3                              LCD_write_com(0x1c); 
+  54   3                              delay_ms(5); 
+  55   3                              keycount--; 
+C51 COMPILER V9.00   MAIN                                                                  04/08/2015 12:35:48 PAGE 2   
+
+  56   3                      } 
+  57   2                      s[ipos] = '\0'; 
+  58   2                      ipos = 0; 
+  59   2                      keycount = 0; 
+  60   2                      value = AccProcess(s); 
+  61   2                      dispdouble(value); 
+  62   2              } 
+  63   1      } 
+  64          void dispdouble(double value) { 
+  65   1              char text[15]; 
+  66   1              sprintf(text,"%15.3f",value); 
+  67   1              LCD_write_str(1,1,text); 
+  68   1      } 
+  69          double AccProcess(char *s) { 
+  70   1              OPTR str; //·ûºÅÕ» 
+  71   1              OPND snd; //Êý¾ÝÕ» 
+  72   1              char flagnum = 0; 
+  73   1              char flagdp = 0; 
+  74   1              char i=0; 
+  75   1              char c,theta; 
+  76   1              double num1,num2,num; 
+  77   1              Init_OPND(&snd,&ND[0]);
+  78   1              Init_OPTR(&str,&TR[0]); 
+  79   1              PUSH_OPTR(&str,'#'); 
+  80   1              flagnum = 0; 
+  81   1              c = *(s++); 
+  82   1              while(c!='#' || (*(str.rtop-1) != '#')) { 
+  83   2                      if(c>='0' && c<= '9') { 
+  84   3                              c = c - 0x30; 
+  85   3                              if(flagdp ==0) { 
+  86   4                                      if(flagnum ==0) { 
+  87   5                                              PUSH_OPND(&snd,(double)c); 
+  88   5                                              flagnum++; 
+  89   5                                      } 
+  90   4                                      else { 
+  91   5                                              Pushnum(&snd,c); 
+  92   5                                              flagnum++; 
+  93   5                                      } 
+  94   4                              } 
+  95   3                              if(flagdp == 1) { 
+  96   4                                      Pushdp(&snd,flagnum,c); 
+  97   4                                      flagnum++; 
+  98   4                              } 
+  99   3                              c=*(s++); 
+ 100   3                      } 
+ 101   2                      else if(c=='.') { 
+ 102   3                              flagdp = 1; 
+ 103   3                              if(flagnum ==0 ) { 
+ 104   4                                      PUSH_OPND(&snd,0x00); 
+ 105   4                              } 
+ 106   3                              flagnum = 1; 
+ 107   3                              c=*(s++); 
+ 108   3                      } 
+ 109   2                      else 
+ 110   2                              switch(Precede(*(str.rtop-1),c)) { 
+ 111   3                                      case 0: if(flagnum == 0 && c != '(') 
+ 112   3                                                      ErrorProcess(); 
+ 113   3                                                      PUSH_OPTR(&str,c);
+ 114   3                                                      c=*(s++);
+ 115   3                                                      flagnum = 0; 
+ 116   3                                                      flagdp = 0; 
+ 117   3                                                      break;
+C51 COMPILER V9.00   MAIN                                                                  04/08/2015 12:35:48 PAGE 3   
+
+ 118   3                                      case 1: POP_OPTR(&str);
+ 119   3                                                      c=*(s++); 
+ 120   3                                                      break; 
+ 121   3                                      case 2: theta = POP_OPTR(&str); 
+ 122   3                                                      num2 = POP_OPND(&snd); 
+ 123   3                                                      num1 = POP_OPND(&snd); 
+ 124   3                                                      num = (double)(Operate(num1,theta,num2)); 
+ 125   3                                                      PUSH_OPND(&snd,num);
+ 126   3                                                      break;
+ 127   3                                      case 3: ErrorProcess(); 
+ 128   3                                                      break;
+ 129   3                                      default:break;
+ 130   3                              } 
+ 131   2                      }
+ 132   1              
+ 133   1              while(*s) { 
+ 134   2                      *s = '\0'; 
+ 135   2                      s++; 
+ 136   2              } 
+ 137   1              return (*(snd.dtop - 1)); 
+ 138   1      } 
+ 139          char getonechar() { 
+ 140   1              unsigned char key1 = 20; 
+ 141   1              keycount++; 
+ 142   1              while(key1 == 20) { 
+ 143   2                      key1 = KeyProcess(); 
+ 144   2                      if(keycount==1 && key1==17) { 
+ 145   3                              key1=20; 
+ 146   3                      } 
+ 147   2              } 
+ 148   1              if(keycount == 1) { 
+ 149   2                      LCD_clear(); 
+ 150   2              } 
+ 151   1              if(keycount >= 16) { 
+ 152   2                      LCD_write_com(0x18); //ÄÚÈÝ×óÒÆ 
+ 153   2              } 
+ 154   1              if(keycount == 33) { 
+ 155   2                      ErrorProcess(); 
+ 156   2              } 
+ 157   1              if(key1 == 17) { 
+ 158   2                      LCD_write_char(keycount-2,0,0x20); 
+ 159   2                      delay_ms(2); 
+ 160   2                      LCD_write_com(0x80+keycount-2); 
+ 161   2                      keycount -= 2; 
+ 162   2              } 
+ 163   1              else if(key1 == 18) {
+ 164   2                      ;
+ 165   2              } 
+ 166   1              else { 
+ 167   2                      LCD_write_Data(uckey[key1]); 
+ 168   2              } 
+ 169   1              return key1; 
+ 170   1      } 
+ 171          void ErrorProcess(void) { 
+ 172   1              LCD_clear(); 
+ 173   1              LCD_write_str(4,1,"ERROR!"); 
+ 174   1              LCD_write_char(10,1,'!'); 
+ 175   1              while(KeyProcess() == 20); 
+ 176   1              ISP_CONTR = 0x20; 
+ 177   1      } //Èí¼þ¸´Î» 
+
+
+C51 COMPILER V9.00   MAIN                                                                  04/08/2015 12:35:48 PAGE 4   
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    880    ----
+   CONSTANT SIZE    =     34    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2      86
+   IDATA SIZE       =    100    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

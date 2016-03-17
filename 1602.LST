@@ -1,0 +1,125 @@
+C51 COMPILER V9.00   1602                                                                  04/08/2015 12:35:48 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE 1602
+OBJECT MODULE PLACED IN 1602.OBJ
+COMPILER INVOKED BY: D:\software\Keil\C51\BIN\C51.EXE 1602.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "includes.h"            //1602.c
+   2          sbit RS = P2^4;                          //定义端口 数据命令选择 H/L     
+   3          sbit RW = P2^5;                         //读写 H/L 
+   4          sbit EN = P2^6;                         //使能 
+   5          extern unsigned char sk; 
+   6          #define RS_CLR RS=0 
+   7          #define RS_SET RS=1 
+   8          #define RW_CLR RW=0 
+   9          #define RW_SET RW=1 
+  10          #define EN_CLR EN=0 
+  11          #define EN_SET EN=1 
+  12          /******************************************************************/ 
+  13                                                          /* 写入命令函数 */ 
+  14          /******************************************************************/ 
+  15          void LCD_write_com(unsigned char com) { 
+  16   1              RS_CLR; 
+  17   1              RW_CLR; 
+  18   1              EN_SET; 
+  19   1              P0 = com; 
+  20   1              delay_us(5); 
+  21   1              EN_CLR; 
+  22   1      } 
+  23          /******************************************************************/
+  24                                                          /* 写入数据函数 */ 
+  25          /******************************************************************/ 
+  26          void LCD_write_Data(unsigned char Data) { 
+  27   1              RS_SET; 
+  28   1              RW_CLR; 
+  29   1              EN_SET; 
+  30   1              P0 = Data; 
+  31   1              delay_us(5); 
+  32   1              EN_CLR; 
+  33   1      }
+  34          /******************************************************************/ 
+  35                                                          /* 清屏函数 */ 
+  36          /******************************************************************/ 
+  37          void LCD_clear(void) { 
+  38   1              LCD_write_com(0x01); 
+  39   1              delay_ms(5);
+  40   1              if(sk == 1) { 
+  41   2                      LCD_write_char(0,1,0xde); 
+  42   2                      LCD_write_com(0x80); 
+  43   2              } 
+  44   1              else { 
+  45   2                      LCD_write_char(0,1,0x20); 
+  46   2                      LCD_write_com(0x80); 
+  47   2              } 
+  48   1      } 
+  49          /******************************************************************/ 
+  50                                                          /* 写入字符串函数 */ 
+  51          /******************************************************************/ 
+  52          void LCD_write_str(unsigned char x,unsigned char y,unsigned char *s) { 
+  53   1              unsigned char i,j; 
+  54   1              if (y == 0) { LCD_write_com(0x80 + x); 
+  55   2              } 
+C51 COMPILER V9.00   1602                                                                  04/08/2015 12:35:48 PAGE 2   
+
+  56   1              else { 
+  57   2                      LCD_write_com(0xC0 + x); 
+  58   2              } 
+  59   1              for(i=4;i>0;i--) { 
+  60   2                      if(s[14] == '0' || s[14] == '.') { 
+  61   3                              for(j=14;j>1;j--) { 
+  62   4                                      s[j] = s[j-1]; 
+  63   4                              } 
+  64   3                      } 
+  65   2                      else break; 
+  66   2              } 
+  67   1              while (*s) { 
+  68   2              LCD_write_Data(*s); 
+  69   2              s++; 
+  70   2              } 
+  71   1      } 
+  72          /******************************************************************/ 
+  73                                                          /* 写入字节函数 */
+  74          /******************************************************************/ 
+  75          void LCD_write_char(unsigned char x,unsigned char y,unsigned char Data) { 
+  76   1              if (y == 0) { 
+  77   2                      LCD_write_com(0x80 + x); 
+  78   2              } 
+  79   1              else { 
+  80   2                      LCD_write_com(0xC0 + x); 
+  81   2                      } 
+  82   1              LCD_write_Data(Data); 
+  83   1      } 
+  84          /******************************************************************/ 
+  85                                                          /* 初始化函数 */ 
+  86          /******************************************************************/ 
+  87          void LCD_init(void) { 
+  88   1              LCD_write_com(0x38); /*显示模式设置*/ 
+  89   1              delay_ms(5); 
+  90   1              LCD_write_com(0x38); 
+  91   1              delay_ms(5); 
+  92   1              LCD_write_com(0x38); 
+  93   1              delay_ms(5); 
+  94   1              LCD_write_com(0x38); 
+  95   1              LCD_write_com(0x08); /*显示关闭*/ 
+  96   1              LCD_write_com(0x01); /*显示清屏*/ 
+  97   1              LCD_write_com(0x06); /*显示光标移动设置*/ 
+  98   1              delay_ms(5); 
+  99   1              LCD_write_com(0x0C); /*显示开及光标设置*/ 
+ 100   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    281    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

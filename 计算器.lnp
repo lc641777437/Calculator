@@ -1,0 +1,8 @@
+"delay.obj",
+"1602.obj",
+"keyboard.obj",
+"stack.obj",
+"main.obj",
+".\STARTUP.obj" 
+TO "¼ÆËãÆ÷" 
+RAMSIZE(256) 
